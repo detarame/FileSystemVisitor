@@ -16,6 +16,12 @@ namespace FileSystemVisitor
             {
                 Console.WriteLine(Dir);
             }
+            Console.WriteLine("filter");
+            foreach (var i in varVisitor.GetDirs(@"D:\NewDir", x => x.Length <= 20))
+            {
+                Console.WriteLine(i);
+            }
+            Console.WriteLine("end filter");
             Console.ReadKey();
         }
     }
