@@ -14,7 +14,10 @@ namespace FileSystemVisitor
     class Visitor: IEnumerable
     {
         string RootPath { get; set; } //начальная точка
-       
+
+        public bool toStop { get; set; } //флаг для прекращения 
+        public bool toExclude { get; set; } //флаг для исключения файла/папки
+
         List<string> allFiltered; //папки и файлы фильтр
         List<string> all; //папки и файлы вместе
         List<string> dir;
@@ -75,20 +78,55 @@ namespace FileSystemVisitor
                 yield return dir[i];
         }
 
-        //version 2
+        //version 3
         public IEnumerable GetDirs(string root, Filter filter)
         {
             Start?.Invoke(this, new EventArgs());
-            files = new List<string>(Directory.GetFiles(root));
-            dir = new List<string>(Directory.GetDirectories(root));
-            for (int i = 0; i < files.Count; i++) { //поиск и фильтр файлов
-                if (filter(files[i])) { yield return files[i]; FilesFinded?.Invoke(this, new EventArgs()); }
-                else FilteredFilesFinded?.Invoke(this, new EventArgs());
-            }
-            for (int i = 0; i < dir.Count; i++) //поиск и фильтр папок
+            Queue<string> rootsQueue = new Queue<string>(new string[]{ root });
+            while (rootsQueue.Count != 0)
             {
-                if (filter(dir[i])) { yield return dir[i]; FilesFinded?.Invoke(this, new EventArgs()); }
-                else FilteredFilesFinded?.Invoke(this, new EventArgs());
+                root = rootsQueue.Dequeue(); //поиск в данной папке
+                files = new List<string>(Directory.GetFiles(root));
+                dir = new List<string>(Directory.GetDirectories(root));
+                foreach (var i in dir) { //добавить папки в очередь
+                    rootsQueue.Enqueue(i);
+                }
+                for (int i = 0; i < files.Count; i++)
+                { //поиск и фильтр файлов
+                    if (filter(files[i]))
+                    {
+                        FilesFinded?.Invoke(this, new EventArgs());
+                        if (toExclude) //если файл исключается
+                        {
+                            toExclude = false;
+                            continue;
+                        }
+                        else { yield return files[i]; }
+                    }
+                    else
+                    {
+                        FilteredFilesFinded?.Invoke(this, new EventArgs());
+                        if (toStop) { toStop = false; yield break; }; //остановка поиска
+                    }
+                }
+                for (int i = 0; i < dir.Count; i++) //поиск и фильтр папок
+                {
+                    if (filter(dir[i]))
+                    {
+                        FilesFinded?.Invoke(this, new EventArgs());
+                        if (toExclude)
+                        {
+                            toExclude = false;
+                            continue;
+                        }
+                        else { yield return dir[i]; }
+                    }
+                    else
+                    {
+                        FilteredFilesFinded?.Invoke(this, new EventArgs());
+                        if (toStop) { toStop = false; yield break; };
+                    }
+                }
             }
             Finish?.Invoke(this, new EventArgs());
         }
