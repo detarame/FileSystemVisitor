@@ -1,6 +1,0 @@
-D:\mentoring\FileSystemVisitor\bin\Debug\FileSystemVisitor.exe.config
-D:\mentoring\FileSystemVisitor\bin\Debug\FileSystemVisitor.exe
-D:\mentoring\FileSystemVisitor\bin\Debug\FileSystemVisitor.pdb
-D:\mentoring\FileSystemVisitor\obj\Debug\FileSystemVisitor.csprojAssemblyReference.cache
-D:\mentoring\FileSystemVisitor\obj\Debug\FileSystemVisitor.exe
-D:\mentoring\FileSystemVisitor\obj\Debug\FileSystemVisitor.pdb
