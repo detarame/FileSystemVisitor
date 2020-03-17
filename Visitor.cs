@@ -33,35 +33,56 @@ namespace FileSystemVisitor
                     rootsQueue.Enqueue(i);
                 }
                 dir.AddRange(Directory.GetFiles(root));
-                foreach (var name in dir) 
+
+                foreach (var name in dir)
                 {
-                    if (filter(name))
+                    var result = ToCheck(name, filter);
+                    if (result == 1)
                     {
-                        FilesFinded?.Invoke(this, new EventArgs());
-                        if (toExclude)
-                        {
-                            toExclude = false;
-                            continue;
-                        }
-                        else 
-                        {
-                            yield return name; 
-                        }
+                            yield return name;
+                    }
+                    else if (result == 0)
+                    {
+                       continue;
                     }
                     else
                     {
-                        FilteredFilesFinded?.Invoke(this, new EventArgs());
-                        if (toStop) 
-                        {
-                            toStop = false; 
-                            Finish?.Invoke(this, new EventArgs()); 
-                            yield break; 
-                        };
+                        yield break;
                     }
                 }
             }
             Finish?.Invoke(this, new EventArgs());
         }
-
+        private int ToCheck(string name, Filter filter)
+        {
+            if (filter(name))
+            {
+                FilesFinded?.Invoke(this, new EventArgs());
+                if (toExclude)
+                {
+                    toExclude = false;
+                    return 0;
+                }
+                else
+                {
+                    return 1;
+                }
+            }
+            else
+            {
+                FilteredFilesFinded?.Invoke(this, new EventArgs());
+                if (toStop)
+                {
+                    toStop = false;
+                    Finish?.Invoke(this, new EventArgs());
+                    return -1;
+                }
+                else
+                {
+                    return 0;
+                }
+            }
+            
+        }
     }
 }
