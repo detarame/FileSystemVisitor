@@ -5,7 +5,7 @@ using System.IO;
 
 namespace FileSystemVisitor
 {
-    class Visitor
+    public class Visitor
     {
         // Флаг для прекращения поиска.
         public bool toStop { get; set; } 
@@ -18,8 +18,18 @@ namespace FileSystemVisitor
         public event EventHandler FilteredFilesFinded;
 
         public delegate bool Filter(string x);
-
-        public IEnumerable GetDirs(string root, Filter filter)
+        IDirectory directory;
+        enum ItemState
+        {
+            Return,
+            Continue,
+            Break
+        }
+        public Visitor(IDirectory directory)
+        {
+            this.directory = directory;
+        }
+        public IEnumerable<string> GetDirs(string root, Filter filter)
         {
             Start?.Invoke(this, new EventArgs());
             var rootsQueue = new Queue<string>(new string[]{ root });
@@ -27,25 +37,25 @@ namespace FileSystemVisitor
             {
                 // Поиск в данной папке.
                 root = rootsQueue.Dequeue(); 
-                var dir = new List<string>(Directory.GetDirectories(root));
+                var dir = new List<string>(directory.GetDirectories(root));
                 // Добавить папки в очередь.
                 foreach (var i in dir) { 
                     rootsQueue.Enqueue(i);
                 }
-                dir.AddRange(Directory.GetFiles(root));
+                dir.AddRange(directory.GetFiles(root));
 
                 foreach (var name in dir)
                 {
                     var result = ToCheck(name, filter);
-                    if (result == 1)
+                    if (result == ItemState.Return)
                     {
                             yield return name;
                     }
-                    else if (result == 0)
+                    if (result == ItemState.Continue)
                     {
                        continue;
                     }
-                    else
+                    if (result == ItemState.Break)
                     {
                         yield break;
                     }
@@ -53,7 +63,7 @@ namespace FileSystemVisitor
             }
             Finish?.Invoke(this, new EventArgs());
         }
-        private int ToCheck(string name, Filter filter)
+        private ItemState ToCheck(string name, Filter filter)
         {
             if (filter(name))
             {
@@ -61,11 +71,11 @@ namespace FileSystemVisitor
                 if (toExclude)
                 {
                     toExclude = false;
-                    return 0;
+                    return ItemState.Continue;
                 }
                 else
                 {
-                    return 1;
+                    return ItemState.Return;
                 }
             }
             else
@@ -75,11 +85,11 @@ namespace FileSystemVisitor
                 {
                     toStop = false;
                     Finish?.Invoke(this, new EventArgs());
-                    return -1;
+                    return ItemState.Break;
                 }
                 else
                 {
-                    return 0;
+                    return ItemState.Continue;
                 }
             }
             

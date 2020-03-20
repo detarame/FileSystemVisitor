@@ -1,4 +1,5 @@
 ﻿using System;
+using System.IO;
 
 namespace FileSystemVisitor
 {
@@ -7,7 +8,7 @@ namespace FileSystemVisitor
         static void Main(string[] args)
         {
             var user = new User();
-            var varVisitor = new Visitor();
+            var varVisitor = new Visitor(new MyDirectoryInfo());
             varVisitor.FilteredFilesFinded += user.OnFilteredFinded;
             varVisitor.Finish += user.OnFinish;
             varVisitor.Start += user.OnStart;
