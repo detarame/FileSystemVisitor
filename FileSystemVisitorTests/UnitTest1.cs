@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using Moq;
 using FileSystemVisitor;
@@ -33,7 +34,7 @@ namespace FileSystemVisitorTests
             
             // act
             //visitor.toExclude = true;
-            var tmp = visitor.GetDirs("aa", x => x.Length == 6);
+            var tmp = visitor.GetDirs("aa", x => x.Length == 6).ToList();
 
 
             // assert
